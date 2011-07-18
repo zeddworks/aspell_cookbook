@@ -17,11 +17,11 @@
 # limitations under the License.
 #
 
-case node[:platform]
-when "redhat"
-  package "aspell-devel"
-when "debian"
-  package "libaspell-dev"
+package "aspell-dev" do
+  package_name value_for_platform(
+    ["ubuntu", "debian"] => { "default" => "libaspell-dev" },
+    ["redhat"] => { "default" => "aspell-devel" }
+  )
 end
 
 ruby_block "dict_dir" do
@@ -29,8 +29,9 @@ ruby_block "dict_dir" do
     require 'open3'
     dict_dir = Open3.popen3("aspell config dict-dir")[1].read.chomp
     cookbook_file = Chef::Resource::CookbookFile.new("#{dict_dir}/ap.multi",@run_context)
-    cookbook_file.source "ap.multi"
     cookbook_file.cookbook "aspell"
+    cookbook_file.source "ap.multi"
+    cookbook_file.mode "0755"
     cookbook_file.run_action :create_if_missing
   end
 end
